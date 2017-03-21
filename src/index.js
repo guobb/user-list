@@ -1,8 +1,12 @@
 import dva from 'dva';
 import './index.css';
 
+require('../node_modules/antd/dist/antd.css');
+
 // 1. Initialize
 const app = dva();
+
+app.model(require("./models/users"));
 
 // 2. Plugins
 // app.use({});
