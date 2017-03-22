@@ -1,16 +1,36 @@
 import React from 'react';
 import {connect} from 'dva';
 import {Table, Pagination, Popconfirm} from 'antd';
+import {routerRedux} from 'dva/router';
 import styles from './Users.css';
+
 
 import {PAGE_SIZE} from '../../constants';
 
+import UserModal from './UserModel';
 
-function Users({list:dataSource, total, page: cuttent}) {
+
+function Users({dispatch, list:dataSource, loading, total, page: cuttent}) {
   function deleteHandler(id) {
-    console.warn(`todo:${id}`);
+    dispatch({
+      type:'users/remove',
+      payload: id,
+    })
   }
 
+  function editHandler(id,values) {
+    dispatch({
+      type:'users/patch',
+      payload:{id,values},
+    })
+  }
+
+  function pageChangeHandler(page) {
+    dispatch(routerRedux.push({
+      pathname:'/users',
+      query:{page},
+    }))
+  }
   const columns = [
     {
       title: 'Name',
@@ -31,11 +51,13 @@ function Users({list:dataSource, total, page: cuttent}) {
     {
       title: 'Operation',
       key: 'operation',
-      render: (text, {id}) => (
+      render: (text, record) => (
         <span className={styles.operation}>
-          <a href="">Edit</a>
-          <Popconfirm title="Confirm to delete?" onConfirm={deleteHandler.bind(null, id)}>
-            <a href="">Delate</a>
+          <UserModal record={record} onOk={editHandler.bind(null,record.id)}>
+            <a>Edit</a>
+          </UserModal>
+          <Popconfirm title="Confirm to delete?" onConfirm={deleteHandler.bind(null, record.id)}>
+            <a href="">Delete</a>
           </Popconfirm>
         </span>
       ),
@@ -48,13 +70,15 @@ function Users({list:dataSource, total, page: cuttent}) {
         <Table
           columns={columns}
           dataSource={dataSource}
+          loading={loading}
           rowKey={record => record.id}
         />
         <Pagination
-          className = "ant-table-pagination"
-          total = {total}
-          current = {cuttent}
+          className="ant-table-pagination"
+          total={total}
+          current={cuttent}
           pageSize={PAGE_SIZE}
+          onChange={pageChangeHandler}
         />
       </div>
     </div>
@@ -63,8 +87,9 @@ function Users({list:dataSource, total, page: cuttent}) {
 
 
 function mapStateToPtops(state) {
-  const {list,total,page} = state.users;
+  const {list, total, page} = state.users;
   return {
+    loading: state.loading.models.users,
     list,
     total,
     page,
